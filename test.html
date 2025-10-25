@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turso DB Test Připojení</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+
+        .test-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.9em;
+            font-family: 'Courier New', monospace;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .result.success {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            color: #155724;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            color: #721c24;
+        }
+
+        .result.info {
+            background: #d1ecf1;
+            border: 2px solid #17a2b8;
+            color: #0c5460;
+        }
+
+        .config-values {
+            background: #fff;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            border: 1px solid #ddd;
+        }
+
+        .config-values p {
+            margin: 5px 0;
+            font-size: 0.85em;
+        }
+
+        .config-values strong {
+            color: #667eea;
+        }
+
+        .hint {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px;
+            margin-top: 15px;
+            font-size: 0.85em;
+            color: #856404;
+        }
+
+        .step {
+            background: white;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+        }
+
+        .step-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Turso DB Test Připojení</h1>
+        <p class="subtitle">Diagnostický nástroj pro kontrolu připojení k databázi</p>
+
+        <div class="test-section">
+            <h3>📝 Konfigurace</h3>
+            <div class="input-group">
+                <label for="dbUrl">Database URL:</label>
+                <input type="text" id="dbUrl" placeholder="https://your-db-name.turso.io">
+            </div>
+            <div class="input-group">
+                <label for="authToken">Auth Token (read-only):</label>
+                <input type="password" id="authToken" placeholder="eyJhbGc...">
+            </div>
+            <button onclick="runFullTest()" id="testBtn">🚀 Spustit test připojení</button>
+        </div>
+
+        <div id="results"></div>
+
+        <div class="test-section">
+            <h3>💡 Návod na získání údajů:</h3>
+            <div class="step">
+                <span class="step-number">1</span>
+                <strong>Database URL:</strong> Najdeš v Turso dashboard nebo příkazem:<br>
+                <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">turso db show your-db-name</code>
+            </div>
+            <div class="step">
+                <span class="step-number">2</span>
+                <strong>Read-only Token:</strong> Vygeneruj příkazem:<br>
+                <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">turso db tokens create your-db-name --read-only</code>
+            </div>
+            <div class="step">
+                <span class="step-number">3</span>
+                <strong>CORS problém?</strong> Pokud testuješ lokálně (file://), může se objevit CORS error. To je normální - na Github Pages to bude fungovat!
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function addResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `result ${type}`;
+            resultDiv.textContent = message;
+            resultsDiv.appendChild(resultDiv);
+            
+            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        async function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function testStep1_ValidateInputs() {
+            const url = document.getElementById('dbUrl').value.trim();
+            const token = document.getElementById('authToken').value.trim();
+
+            await addResult('=== TEST 1: Validace vstupů ===', 'info');
+
+            if (!url) {
+                await addResult('❌ CHYBA: Database URL je prázdná!', 'error');
+                return false;
+            }
+
+            if (!token) {
+                await addResult('❌ CHYBA: Auth Token je prázdný!', 'error');
+                return false;
+            }
+
+            if (!url.startsWith('http')) {
+                await addResult('❌ CHYBA: URL musí začínat http:// nebo https://', 'error');
+                return false;
+            }
+
+            if (!url.includes('turso.io')) {
+                await addResult('⚠️ VAROVÁNÍ: URL nevypadá jako Turso endpoint (neobsahuje turso.io)', 'error');
+            }
+
+            await addResult(`✅ URL: ${url}`, 'success');
+            await addResult(`✅ Token délka: ${token.length} znaků`, 'success');
+            await addResult(`✅ Token začíná: ${token.substring(0, 10)}...`, 'success');
+
+            return true;
+        }
+
+        async function testStep2_BasicConnection() {
+            await addResult('\n=== TEST 2: Základní připojení ===', 'info');
+
+            const url = document.getElementById('dbUrl').value.trim();
+            const token = document.getElementById('authToken').value.trim();
+
+            try {
+                const response = await fetch(`${url}/v2/pipeline`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        requests: [{
+                            type: 'execute',
+                            stmt: {
+                                sql: 'SELECT 1 as test'
+                            }
+                        }]
+                    })
+                });
+
+                await addResult(`Response status: ${response.status} ${response.statusText}`, 'info');
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    await addResult(`❌ HTTP Error!\nStatus: ${response.status}\nResponse: ${errorText}`, 'error');
+                    return false;
+                }
+
+                const data = await response.json();
+                await addResult(`✅ Připojení úspěšné!\nResponse: ${JSON.stringify(data, null, 2)}`, 'success');
+                return true;
+
+            } catch (error) {
+                await addResult(`❌ CHYBA při připojení:\n${error.message}\n\nStack: ${error.stack}`, 'error');
+                
+                if (error.message.includes('CORS')) {
+                    await addResult('💡 CORS ERROR detekován! To je normální při lokálním testování (file://). Nahraj na Github Pages a bude to fungovat.', 'info');
+                }
+                
+                return false;
+            }
+        }
+
+        async function testStep3_QueryUsersTable() {
+            await addResult('\n=== TEST 3: Dotaz na tabulku users ===', 'info');
+
+            const url = document.getElementById('dbUrl').value.trim();
+            const token = document.getElementById('authToken').value.trim();
+
+            try {
+                const response = await fetch(`${url}/v2/pipeline`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        requests: [{
+                            type: 'execute',
+                            stmt: {
+                                sql: 'SELECT * FROM users ORDER BY age'
+                            }
+                        }]
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    await addResult(`❌ Chyba při dotazu:\n${errorText}`, 'error');
+                    return false;
+                }
+
+                const data = await response.json();
+                const result = data.results[0].response.result;
+
+                await addResult(`✅ Dotaz úspěšný!\nNačteno řádků: ${result.rows.length}`, 'success');
+                await addResult(`\nData z tabulky users:\n${JSON.stringify(result.rows, null, 2)}`, 'success');
+
+                return true;
+
+            } catch (error) {
+                await addResult(`❌ CHYBA:\n${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function runFullTest() {
+            const btn = document.getElementById('testBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Testuji...';
+
+            await clearResults();
+
+            const step1 = await testStep1_ValidateInputs();
+            if (!step1) {
+                btn.disabled = false;
+                btn.textContent = '🚀 Spustit test připojení';
+                return;
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            const step2 = await testStep2_BasicConnection();
+            if (!step2) {
+                btn.disabled = false;
+                btn.textContent = '🚀 Spustit test připojení';
+                return;
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            await testStep3_QueryUsersTable();
+
+            await addResult('\n=== ✅ TEST DOKONČEN ===', 'success');
+
+            btn.disabled = false;
+            btn.textContent = '🚀 Spustit test znovu';
+        }
+    </script>
+</body>
+</html>

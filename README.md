@@ -17,3 +17,5 @@ TURSO_DATABASE_URL="..." TURSO_AUTH_TOKEN="..." python3 main.py
 ```
 
 This will connect to a remote database, insert some data, and query it.
+
+`pip install python-dotenv`
